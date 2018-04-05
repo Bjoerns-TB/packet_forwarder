@@ -489,7 +489,7 @@ void stats_report() {
             printf("### [GPS] ###\n");
             /* no need for mutex, display is not critical */
             if (gps_fake_enable == true) {
-				printf("# No time keeping possible due to fake gps.\n");
+				printf("# Valid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
             } else if (gps_ref_valid == true) {
 				printf("# Valid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
             } else {
