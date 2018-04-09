@@ -202,7 +202,7 @@
         "gateway_ID": "AA555A0000000000",
         /* Systems (set logger to true for logs per (!) packet) */
         "gps": false,
-        "beacon": false,
+        "beacon": true,
         "logger": true,
         /* Streams */
         "upstream": true,
