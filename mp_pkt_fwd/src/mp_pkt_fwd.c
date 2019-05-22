@@ -223,6 +223,7 @@ bool logger_enabled      = false;   /* controls the activation of more logging  
 bool flush_enabled       = false;   /* flush output after statistics                    */
 bool flush_line          = false;   /* flush output after every line                    */
 bool wd_enabled		 = false;   /* watchdog enabled					*/
+bool print_stats         = true;    /* print stats in log file (or stdout)              */
 
 /* TX capabilities */
 struct lgw_tx_gain_lut_s txlut; /* TX gain table */
@@ -1114,6 +1115,18 @@ static int parse_gateway_configuration(const char * conf_file) {
 	} else {
 		MSG("INFO: Watchdog is disabled\n");
     }
+
+	/* Read the value for stat_print data */
+	val = json_object_get_value(conf_obj, "stat_print");
+	if (json_value_get_type(val) == JSONBoolean) {
+		print_stats = (bool)json_value_get_boolean(val);
+	}
+	if (print_stats == true) {
+		MSG("INFO: Printing stats is enabled\n");
+	} else {
+		MSG("INFO: Printing stats is disabled\n");
+    }
+
 
 	/* Auto-quit threshold (optional) */
     val = json_object_get_value(conf_obj, "autoquit_threshold");
