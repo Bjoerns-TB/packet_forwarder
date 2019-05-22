@@ -79,6 +79,7 @@ extern struct coord_s reference_coord;
 
 extern bool beacon_enabled;
 extern bool logger_enabled;
+extern bool print_stats;
 extern bool gps_enabled;
 extern bool beacon_enabled;
 extern bool upstream_enabled;
@@ -448,84 +449,86 @@ void stats_report() {
 		move_dw_beacon_quality =  moveave(move_dw_beacon_quality,cp_nb_beacon_sent,cp_nb_beacon_queued);
 
         /* display a report */
-        printf("\n##### %s #####\n", stat_timestamp);
-        if (upstream_enabled == true) {
-        	printf("### [UPSTREAM] ###\n");
-        	printf("# RF packets received by concentrator: %u\n", cp_nb_rx_rcv);
-        	printf("# CRC_OK: %.2f%%, CRC_FAIL: %.2f%%, NO_CRC: %.2f%%\n", 100.0 * rx_ok_ratio, 100.0 * rx_bad_ratio, 100.0 * rx_nocrc_ratio);
-        	printf("# RF packets forwarded: %u (%u bytes)\n", cp_up_pkt_fwd, cp_up_payload_byte);
-        	printf("# PUSH_DATA datagrams sent: %u (%u bytes)\n", cp_up_dgram_sent, cp_up_network_byte);
-        	printf("# PUSH_DATA acknowledged: %.2f%%\n", 100.0 * up_ack_ratio);
-        } else {
-        	printf("### UPSTREAM IS DISABLED! \n");
-        }
-        if (downstream_enabled == true) {
-        	printf("### [DOWNSTREAM] ###\n");
-        	printf("# PULL_DATA sent: %u (%.2f%% acknowledged)\n", cp_dw_pull_sent, 100.0 * dw_ack_ratio);
-        	printf("# PULL_RESP(onse) datagrams received: %u (%u bytes)\n", cp_dw_dgram_rcv, cp_dw_network_byte);
-        	printf("# RF packets sent to concentrator: %u (%u bytes)\n", (cp_nb_tx_ok+cp_nb_tx_fail), cp_dw_payload_byte);
-        	printf("# TX errors: %u\n", cp_nb_tx_fail);
-        	if (cp_nb_tx_requested != 0 ) {
-        		printf("# TX rejected (collision packet): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_collision_packet / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_collision_packet);
-        		printf("# TX rejected (collision beacon): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_collision_beacon / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_collision_beacon);
-        		printf("# TX rejected (too late): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_too_late / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_too_late);
-        		printf("# TX rejected (too early): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_too_early / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_too_early);
+        if (print_stats == true) {
+        	printf("\n##### %s #####\n", stat_timestamp);
+        	if (upstream_enabled == true) {
+        		printf("### [UPSTREAM] ###\n");
+        		printf("# RF packets received by concentrator: %u\n", cp_nb_rx_rcv);
+        		printf("# CRC_OK: %.2f%%, CRC_FAIL: %.2f%%, NO_CRC: %.2f%%\n", 100.0 * rx_ok_ratio, 100.0 * rx_bad_ratio, 100.0 * rx_nocrc_ratio);
+        		printf("# RF packets forwarded: %u (%u bytes)\n", cp_up_pkt_fwd, cp_up_payload_byte);
+        		printf("# PUSH_DATA datagrams sent: %u (%u bytes)\n", cp_up_dgram_sent, cp_up_network_byte);
+        		printf("# PUSH_DATA acknowledged: %.2f%%\n", 100.0 * up_ack_ratio);
+        	} else {
+        		printf("### UPSTREAM IS DISABLED! \n");
         	}
-        } else {
-        	printf("### DOWNSTREAM IS DISABLED! \n");
-        }
-        if (beacon_enabled == true) {
-        	printf("### [BEACON] ###\n");
-        	printf("# Packets queued: %u\n", cp_nb_beacon_queued);
-        	printf("# Packets sent so far: %u\n", cp_nb_beacon_sent);
-        	printf("# Packets rejected: %u\n", cp_nb_beacon_rejected);
-        } else {
-        	printf("### BEACON IS DISABLED! \n");
-        }
-     	printf("### [JIT] ###\n");
-        jit_report_queue (&jit_queue);
-		//TODO: this is not symmetrical. time can also be derived from other sources, fix
-        if (gps_enabled == true) {
-            printf("### [GPS] ###\n");
-            /* no need for mutex, display is not critical */
-            if (gps_fake_enable == true) {
-				printf("# Valid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
-            } else if (gps_ref_valid == true) {
-				printf("# Valid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
-            } else {
-				printf("# Invalid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
-            }
-            if (gps_fake_enable == true) {
-				printf("# Manual GPS coordinates: latitude %.5f, longitude %.5f, altitude %i m\n", cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt);
-            } else if (coord_ok == true) {
-				printf("# System GPS coordinates: latitude %.5f, longitude %.5f, altitude %i m\n", cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt);
-            } else {
-                printf("# no valid GPS coordinates available yet\n");
-            }
-        } else {
-            printf("### GPS IS DISABLED! \n");
-        }
+        	if (downstream_enabled == true) {
+        		printf("### [DOWNSTREAM] ###\n");
+        		printf("# PULL_DATA sent: %u (%.2f%% acknowledged)\n", cp_dw_pull_sent, 100.0 * dw_ack_ratio);
+        		printf("# PULL_RESP(onse) datagrams received: %u (%u bytes)\n", cp_dw_dgram_rcv, cp_dw_network_byte);
+        		printf("# RF packets sent to concentrator: %u (%u bytes)\n", (cp_nb_tx_ok+cp_nb_tx_fail), cp_dw_payload_byte);
+        		printf("# TX errors: %u\n", cp_nb_tx_fail);
+        		if (cp_nb_tx_requested != 0 ) {
+        			printf("# TX rejected (collision packet): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_collision_packet / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_collision_packet);
+        			printf("# TX rejected (collision beacon): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_collision_beacon / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_collision_beacon);
+        			printf("# TX rejected (too late): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_too_late / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_too_late);
+        			printf("# TX rejected (too early): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_too_early / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_too_early);
+        		}
+        	} else {
+        		printf("### DOWNSTREAM IS DISABLED! \n");
+        	}
+        	if (beacon_enabled == true) {
+        		printf("### [BEACON] ###\n");
+        		printf("# Packets queued: %u\n", cp_nb_beacon_queued);
+        		printf("# Packets sent so far: %u\n", cp_nb_beacon_sent);
+        		printf("# Packets rejected: %u\n", cp_nb_beacon_rejected);
+        	} else {
+        		printf("### BEACON IS DISABLED! \n");
+        	}
+     		printf("### [JIT] ###\n");
+        	jit_report_queue (&jit_queue);
+			//TODO: this is not symmetrical. time can also be derived from other sources, fix
+        	if (gps_enabled == true) {
+            	printf("### [GPS] ###\n");
+            	/* no need for mutex, display is not critical */
+            	if (gps_fake_enable == true) {
+					printf("# No time keeping possible due to fake gps.\n");
+            	} else if (gps_ref_valid == true) {
+					printf("# Valid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
+            	} else {
+					printf("# Invalid gps time reference (age: %li sec)\n", (long)difftime(time(NULL), time_reference_gps.systime));
+            	}
+            	if (gps_fake_enable == true) {
+					printf("# Manual GPS coordinates: latitude %.5f, longitude %.5f, altitude %i m\n", cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt);
+            	} else if (coord_ok == true) {
+					printf("# System GPS coordinates: latitude %.5f, longitude %.5f, altitude %i m\n", cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt);
+            	} else {
+                	printf("# no valid GPS coordinates available yet\n");
+            	}
+        	} else {
+            	printf("### GPS IS DISABLED! \n");
+        	}
 
-     	printf("### [PERFORMANCE] ###\n");
-     	if (upstream_enabled == true) {
-     		printf("# Upstream radio packet quality: %.2f%%.\n",100*move_up_rx_quality);
-     		for (i=0; i<serv_count; i++) { 
-		   if (servers[i].type == semtech && servers[i].upstream == true) printf("# Upstream datagram acknowledgment quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_up_ack_quality[i]); }
-     	}
-     	if (downstream_enabled == true) {
-     		for (i=0; i<serv_count; i++) { 
-		   if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream heart beat acknowledgment quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_ack_quality[i]); }
-     		for (i=0; i<serv_count; i++) { 
-		   if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream datagram content quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_datagram_quality[i]); }
-     		for (i=0; i<serv_count; i++) { 
-		   if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream radio transmission quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_receive_quality[i]); }
-     	}
-     	if (beacon_enabled == true) {
-     		printf("# Downstream beacon transmission quality: %.2f%%.\n",100*move_dw_beacon_quality);
-     	}
-
-	printf("### [ CONNECTIONS ] ###\n");
-	transport_status(i);
+     		printf("### [PERFORMANCE] ###\n");
+     		if (upstream_enabled == true) {
+     			printf("# Upstream radio packet quality: %.2f%%.\n",100*move_up_rx_quality);
+     			for (i=0; i<serv_count; i++) { 
+		   	if (servers[i].type == semtech && servers[i].upstream == true) printf("# Upstream datagram acknowledgment quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_up_ack_quality[i]); }
+     		}
+     		if (downstream_enabled == true) {
+     			for (i=0; i<serv_count; i++) { 
+		   	if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream heart beat acknowledgment quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_ack_quality[i]); }
+     			for (i=0; i<serv_count; i++) { 
+		   	if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream datagram content quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_datagram_quality[i]); }
+     			for (i=0; i<serv_count; i++) { 
+		   	if (servers[i].type == semtech && servers[i].downstream == true) printf("# Downstream radio transmission quality for server \"%s\" is %.2f%%.\n",servers[i].addr,100*move_dw_receive_quality[i]); }
+     		}
+     		if (beacon_enabled == true) {
+     			printf("# Downstream beacon transmission quality: %.2f%%.\n",100*move_dw_beacon_quality);
+     		}
+	
+		printf("### [ CONNECTIONS ] ###\n");
+		transport_status(i);
+	}
 
         /* generate a JSON report (will be sent to server by upstream thread) */
 
@@ -627,24 +630,34 @@ void stats_report() {
 				} else {
 					snprintf(status_report, STATUS_SIZE, "{\"stat\":{\"time\":\"%s\",\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u,\"pfrm\":\"%s\",\"mail\":\"%s\",\"desc\":\"%s\"}}", stat_timestamp, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok,platform,email,description);
 				}
-				printf("# Semtech status report send. \n");
+        			if (print_stats == true) {
+					printf("# Semtech status report send. \n");
+				}
 			} else if (lorank_idee_verbose == true) {
 				/* The time field is already permanently included in the packet stream, note that may be a little later. */
 				json_object_remove(root_object_verbose,"time");
 				json_serialize_to_buffer(root_value_verbose,status_report,STATUS_SIZE);
-				printf("# Ideetron verbose status report send. \n");
+        			if (print_stats == true) {
+					printf("# Ideetron verbose status report send. \n");
+				}
 			} else if (lorank_idee_concise == true) {
 				json_serialize_to_buffer(root_value_concise,status_report,STATUS_SIZE);
-				printf("# Ideetron concise status report send. \n");
+        			if (print_stats == true) {
+					printf("# Ideetron concise status report send. \n");
+				}
 			} else 	{
-				printf("# NO status report send (format unknown!) \n");
+        			if (print_stats == true) {
+					printf("# NO status report send (format unknown!) \n");
+				}
 			}
 			report_ready = true;
 			pthread_mutex_unlock(&mx_stat_rep);
 		}
 		if (statusstream_enabled == true || has_stat_file == true)  json_value_free(root_value_verbose);
 		if (statusstream_enabled == true && lorank_idee_concise)    json_value_free(root_value_concise);
-	    printf("##### END #####\n");
+       	    if (print_stats == true) {
+	        printf("##### END #####\n");
+	    }
 
 	    // Send status using TTN protocol
 	    transport_status_up(cp_nb_rx_rcv, cp_nb_rx_ok, cp_nb_tx_ok + cp_nb_tx_fail, cp_nb_tx_ok);
